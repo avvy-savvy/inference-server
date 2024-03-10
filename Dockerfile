@@ -1,6 +1,13 @@
 ARG BASE_IMAGE=tensorflow/tensorflow:2.13.0-gpu
 FROM $BASE_IMAGE
 
+#RUN apt-get update && apt-get install -y zsh && apt-get install -y git
+
+#RUN chsh -s $(which zsh)
+
+# Install oh-my-zsh
+#RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
 # Upgrade pip
 RUN python3 -m pip install --upgrade pip
 
@@ -12,6 +19,7 @@ RUN python3 -m pip install -r /tmp/requirements.txt
 
 # Copy source code
 COPY app.py /app/app.py
+COPY data /app/data
 
 # Set the working directory
 WORKDIR /app
@@ -19,9 +27,14 @@ WORKDIR /app
 # Set flask environment labels
 ENV FLASK_APP=app
 ENV FLASK_ENV=development
+ARG HOST_URI=0.0.0.0
+ARG HOST_PORT=5000
+# Entrypoint are unable to use arg values and so converting to environment variables
+ENV APP_URI=$HOST_URI
+ENV APP_PORT=$HOST_PORT
 
 # Expose port
-EXPOSE 5000
+EXPOSE ${HOST_PORT}
 
 # Set the entrypoint
-ENTRYPOINT [ "flask", "run", "--host=0.0.0.0" ]
+ENTRYPOINT flask run --host="${APP_URI}" -p "${APP_PORT}"
